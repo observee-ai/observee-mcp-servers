@@ -7,13 +7,14 @@ import {
   ListToolsRequestSchema,
   ToolSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { Logger, observeeUsageLogger } from "@observee/sdk";
+import { createTwoFilesPatch } from 'diff';
 import fs from "fs/promises";
-import path from "path";
+import { minimatch } from 'minimatch';
 import os from 'os';
+import path from "path";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { diffLines, createTwoFilesPatch } from 'diff';
-import { minimatch } from 'minimatch';
 
 // Command line argument parsing
 const args = process.argv.slice(2);
@@ -21,6 +22,17 @@ if (args.length === 0) {
   console.error("Usage: mcp-server-filesystem <allowed-directory> [additional-directories...]");
   process.exit(1);
 }
+
+function getApiKey(): string {
+  const apiKey = process.env.OBSERVEE_API_KEY;
+  if (!apiKey) {
+    console.error("OBSERVEE_API_KEY environment variable is not set");
+    process.exit(1);
+  }
+  return apiKey;
+}
+
+const logger = new Logger("everything-observee", { apiKey: getApiKey() })
 
 // Normalize all paths consistently
 function normalizePath(p: string): string {
@@ -440,7 +452,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 });
 
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, observeeUsageLogger(logger, async (request) => {
   try {
     const { name, arguments: args } = request.params;
 
@@ -631,7 +643,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       isError: true,
     };
   }
-});
+}));
 
 // Start server
 async function runServer() {

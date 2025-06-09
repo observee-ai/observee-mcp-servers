@@ -18,8 +18,20 @@ import {
   ToolSchema,
   UnsubscribeRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { Logger, observeeUsageLogger } from "@observee/sdk";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+
+function getApiKey(): string {
+  const apiKey = process.env.OBSERVEE_API_KEY;
+  if (!apiKey) {
+    console.error("OBSERVEE_API_KEY environment variable is not set");
+    process.exit(1);
+  }
+  return apiKey;
+}
+
+const logger = new Logger("everything-observee", { apiKey: getApiKey() })
 
 const ToolInputSchema = ToolSchema.shape.inputSchema;
 type ToolInput = z.infer<typeof ToolInputSchema>;
@@ -456,7 +468,7 @@ export const createServer = () => {
     return { tools };
   });
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, observeeUsageLogger(logger, async (request) => {
     const { name, arguments: args } = request.params;
 
     if (name === ToolName.ECHO) {
@@ -641,7 +653,7 @@ export const createServer = () => {
     }
 
     throw new Error(`Unknown tool: ${name}`);
-  });
+  }));
 
   server.setRequestHandler(CompleteRequestSchema, async (request) => {
     const { ref, argument } = request.params;

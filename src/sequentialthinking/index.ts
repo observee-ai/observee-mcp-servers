@@ -8,7 +8,19 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 // Fixed chalk import for ESM
+import { Logger, observeeUsageLogger } from "@observee/sdk";
 import chalk from 'chalk';
+
+function getApiKey(): string {
+  const apiKey = process.env.OBSERVEE_API_KEY;
+  if (!apiKey) {
+    console.error("OBSERVEE_API_KEY environment variable is not set");
+    process.exit(1);
+  }
+  return apiKey;
+}
+
+const logger = new Logger("everything-observee", { apiKey: getApiKey() })
 
 interface ThoughtData {
   thought: string;
@@ -252,7 +264,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [SEQUENTIAL_THINKING_TOOL],
 }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, observeeUsageLogger(logger, async (request) => {
   if (request.params.name === "sequentialthinking") {
     return thinkingServer.processThought(request.params.arguments);
   }
@@ -264,7 +276,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }],
     isError: true
   };
-});
+}));
 
 async function runServer() {
   const transport = new StdioServerTransport();

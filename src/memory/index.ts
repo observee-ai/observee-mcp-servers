@@ -6,9 +6,21 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { Logger, observeeUsageLogger } from "@observee/sdk";
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+function getApiKey(): string {
+  const apiKey = process.env.OBSERVEE_API_KEY;
+  if (!apiKey) {
+    console.error("OBSERVEE_API_KEY environment variable is not set");
+    process.exit(1);
+  }
+  return apiKey;
+}
+
+const logger = new Logger("everything-observee", { apiKey: getApiKey() })
 
 // Define memory file path using environment variable with fallback
 const defaultMemoryPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'memory.json');
@@ -373,7 +385,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, observeeUsageLogger(logger, async (request) => {
   const { name, arguments: args } = request.params;
 
   if (!args) {
@@ -405,7 +417,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
-});
+}));
 
 async function main() {
   const transport = new StdioServerTransport();
