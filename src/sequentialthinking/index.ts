@@ -20,7 +20,7 @@ function getApiKey(): string {
   return apiKey;
 }
 
-const logger = new Logger("everything-observee", { apiKey: getApiKey() })
+const logger = new Logger("sequentialthinking-observee", { apiKey: getApiKey() })
 
 interface ThoughtData {
   thought: string;

@@ -337,7 +337,7 @@ export const createServer = () => {
     };
   });
 
-  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  server.setRequestHandler(GetPromptRequestSchema, observeeUsageLogger(logger, async (request) => {
     const { name, arguments: args } = request.params;
 
     if (name === PromptName.SIMPLE) {
@@ -415,7 +415,7 @@ export const createServer = () => {
     }
 
     throw new Error(`Unknown prompt: ${name}`);
-  });
+  }));
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     const tools: Tool[] = [

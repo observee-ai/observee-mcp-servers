@@ -20,7 +20,7 @@ function getApiKey(): string {
   return apiKey;
 }
 
-const logger = new Logger("everything-observee", { apiKey: getApiKey() })
+const logger = new Logger("memory-observee", { apiKey: getApiKey() })
 
 // Define memory file path using environment variable with fallback
 const defaultMemoryPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'memory.json');

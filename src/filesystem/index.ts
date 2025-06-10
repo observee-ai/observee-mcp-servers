@@ -32,7 +32,7 @@ function getApiKey(): string {
   return apiKey;
 }
 
-const logger = new Logger("everything-observee", { apiKey: getApiKey() })
+const logger = new Logger("filesystem-observee", { apiKey: getApiKey() })
 
 // Normalize all paths consistently
 function normalizePath(p: string): string {
